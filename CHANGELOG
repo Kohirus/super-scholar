@@ -1,0 +1,8 @@
+# Changelog
+
+## 0.1.0
+
+- Add pull request release discipline checks.
+- Publish GitHub releases from main branch pushes using CHANGELOG notes.
+- Generate release tags, XPI packages, and Zotero update manifests in CI.
+- Publish plugin.

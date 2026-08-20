@@ -1,0 +1,126 @@
+<vbox
+  id="zco-preferences"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  xmlns:html="http://www.w3.org/1999/xhtml"
+>
+  <groupbox>
+    <label><html:h2>super-scholar</html:h2></label>
+    <description>
+      Configure MinerU parsing and Obsidian export paths.
+    </description>
+
+    <html:section class="zco-section">
+      <html:h3>MinerU</html:h3>
+      <html:input
+        id="zco-mineru-mode"
+        type="hidden"
+        preference="extensions.zotero-codex-obsidian.mineru.mode"
+      />
+
+      <html:div class="zco-tabs" role="tablist" aria-label="MinerU mode">
+        <html:button
+          id="zco-mineru-local-tab"
+          type="button"
+          role="tab"
+          data-zco-mineru-mode-tab="local"
+          aria-controls="zco-mineru-local-settings"
+        >
+          Local service
+        </html:button>
+        <html:button
+          id="zco-mineru-cloud-tab"
+          type="button"
+          role="tab"
+          data-zco-mineru-mode-tab="cloud"
+          aria-controls="zco-mineru-cloud-settings"
+        >
+          Online service
+        </html:button>
+      </html:div>
+
+      <html:div id="zco-mineru-local-settings">
+        <html:div class="zco-field">
+          <html:label for="zco-mineru-local-api-base">Local MinerU API base URL</html:label>
+          <html:input
+            id="zco-mineru-local-api-base"
+            type="text"
+            preference="extensions.zotero-codex-obsidian.mineru.localApiBase"
+            placeholder="http://127.0.0.1:8000"
+          />
+        </html:div>
+
+        <html:div class="zco-field">
+          <html:label for="zco-mineru-local-backend">Local backend</html:label>
+          <html:select
+            id="zco-mineru-local-backend"
+            preference="extensions.zotero-codex-obsidian.mineru.localBackend"
+          >
+            <html:option value="pipeline">pipeline</html:option>
+            <html:option value="vlm">vlm</html:option>
+            <html:option value="hybrid">hybrid</html:option>
+          </html:select>
+        </html:div>
+      </html:div>
+
+      <html:div id="zco-mineru-cloud-settings" hidden="true">
+        <html:div class="zco-field">
+          <html:label for="zco-mineru-cloud-api-base">Online MinerU API base URL</html:label>
+          <html:input
+            id="zco-mineru-cloud-api-base"
+            type="text"
+            preference="extensions.zotero-codex-obsidian.mineru.cloudApiBase"
+            placeholder="https://mineru.net/api/v4"
+          />
+        </html:div>
+
+        <html:div class="zco-field">
+          <html:label for="zco-mineru-cloud-api-key">Online MinerU API key</html:label>
+          <html:input
+            id="zco-mineru-cloud-api-key"
+            type="password"
+            preference="extensions.zotero-codex-obsidian.mineru.cloudApiKey"
+          />
+        </html:div>
+
+        <html:div class="zco-field">
+          <html:label for="zco-mineru-cloud-model">Online model</html:label>
+          <html:select
+            id="zco-mineru-cloud-model"
+            preference="extensions.zotero-codex-obsidian.mineru.cloudModel"
+          >
+            <html:option value="auto">auto</html:option>
+            <html:option value="ocr">ocr</html:option>
+            <html:option value="txt">txt</html:option>
+          </html:select>
+        </html:div>
+      </html:div>
+
+      <html:div class="zco-field zco-inline">
+        <html:input
+          id="zco-mineru-force-ocr"
+          type="checkbox"
+          preference="extensions.zotero-codex-obsidian.mineru.forceOcr"
+        />
+        <html:label for="zco-mineru-force-ocr">Force OCR</html:label>
+      </html:div>
+
+      <html:div class="zco-actions">
+        <html:button id="zco-test-mineru" type="button">Test MinerU</html:button>
+        <html:span id="zco-test-status"></html:span>
+      </html:div>
+    </html:section>
+
+    <html:section class="zco-section">
+      <html:h3>Obsidian</html:h3>
+      <html:div class="zco-field">
+        <html:label for="zco-obsidian-notes-dir">Notes directory</html:label>
+        <html:input
+          id="zco-obsidian-notes-dir"
+          type="text"
+          preference="extensions.zotero-codex-obsidian.obsidian.notesDir"
+          placeholder="D:\Vault\Papers"
+        />
+      </html:div>
+    </html:section>
+  </groupbox>
+</vbox>

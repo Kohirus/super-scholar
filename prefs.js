@@ -1,0 +1,8 @@
+pref("extensions.zotero-codex-obsidian.mineru.mode", "local");
+pref("extensions.zotero-codex-obsidian.mineru.localApiBase", "http://127.0.0.1:8000");
+pref("extensions.zotero-codex-obsidian.mineru.localBackend", "pipeline");
+pref("extensions.zotero-codex-obsidian.mineru.cloudApiBase", "https://mineru.net/api/v4");
+pref("extensions.zotero-codex-obsidian.mineru.cloudApiKey", "");
+pref("extensions.zotero-codex-obsidian.mineru.cloudModel", "auto");
+pref("extensions.zotero-codex-obsidian.mineru.forceOcr", false);
+pref("extensions.zotero-codex-obsidian.obsidian.notesDir", "");

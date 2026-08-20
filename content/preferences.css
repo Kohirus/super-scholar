@@ -1,0 +1,63 @@
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+#zco-preferences groupbox {
+  max-width: 780px;
+}
+
+.zco-section {
+  border-top: 1px solid var(--fill-quinary, #d7d7d7);
+  display: block;
+  margin-top: 18px;
+  padding-top: 14px;
+}
+
+.zco-section:first-of-type {
+  border-top: 0;
+}
+
+.zco-section html|h3 {
+  margin: 0 0 10px;
+}
+
+.zco-field {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.zco-tabs {
+  display: inline-flex;
+  gap: 4px;
+  margin: 12px 0;
+}
+
+.zco-tabs html|button {
+  border: 1px solid var(--fill-quinary, #c8c8c8);
+  border-radius: 4px;
+  padding: 6px 12px;
+}
+
+.zco-tabs html|button.is-selected {
+  background: var(--accent-blue, #2f6fed);
+  border-color: var(--accent-blue, #2f6fed);
+  color: white;
+}
+
+.zco-field html|input,
+.zco-field html|select {
+  min-height: 28px;
+  max-width: 560px;
+}
+
+.zco-inline {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.zco-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}

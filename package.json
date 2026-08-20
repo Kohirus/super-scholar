@@ -1,0 +1,25 @@
+{
+  "name": "super-scholar",
+  "version": "0.1.1",
+  "description": "A Zotero 9 plugin that exports PDF papers to Obsidian Markdown through MinerU.",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
+  "scripts": {
+    "test": "vitest run",
+    "build": "node scripts/build.mjs",
+    "check:release-discipline": "node scripts/check-release-discipline.mjs",
+    "package": "node scripts/package.mjs",
+    "release:notes": "node scripts/extract-changelog.mjs",
+    "release:manifest": "node scripts/generate-update-manifest.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+  "name": "super-scholar",
+  "version": "0.1.1",
+  "description": "Export Zotero PDF papers to Obsidian Markdown through MinerU.",
+  "author": "Kohirus",
+  "icons": {
+    "16": "content/icons/logo.svg",
+    "32": "content/icons/logo.svg",
+    "48": "content/icons/logo.svg",
+    "96": "content/icons/logo.svg"
+  },
+  "applications": {
+    "zotero": {
+      "id": "super-scholar@Kohirus",
+      "update_url": "https://github.com/Kohirus/super-scholar/releases/latest/download/updates.json",
+      "strict_min_version": "6.999",
+      "strict_max_version": "9999.*"
+    }
+  }
+}
