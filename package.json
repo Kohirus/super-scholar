@@ -1,6 +1,6 @@
 {
   "name": "super-scholar",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "description": "A Zotero 9 plugin that exports PDF papers to Obsidian Markdown through MinerU.",
   "type": "module",
   "license": "AGPL-3.0-or-later",

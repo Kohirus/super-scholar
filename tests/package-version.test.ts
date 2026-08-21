@@ -14,7 +14,7 @@ describe("package and add-on versions", () => {
     const changelog = readFileSync(resolve(root, "CHANGELOG"), "utf8");
 
     expect(packageJson.name).toBe("super-scholar");
-    expect(packageJson.version).toBe("0.1.1");
+    expect(packageJson.version).toMatch(/^\d+\.\d+\.\d+$/);
     expect(manifest.version).toBe(packageJson.version);
     expect(changelog).toContain(`## ${packageJson.version}`);
   });

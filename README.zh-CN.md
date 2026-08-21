@@ -1,5 +1,9 @@
 # super-scholar
 
+<div style="text-align: center;">
+  <img src="./assets/logo.svg" alt="super-scholor" width="30%">
+</div>
+
 super-scholar 是一个 Zotero 9 插件，用于把 Zotero 中的 PDF 论文导出
 到 Obsidian。插件通过 MinerU 解析 PDF，然后写入解析后的 Markdown，并复制一份 hash 重命名后的 PDF。
 
@@ -20,31 +24,3 @@ super-scholar 是一个 Zotero 9 插件，用于把 Zotero 中的 PDF 论文导�
 
 插件只负责 Zotero 内的导出流程，不会安装 MinerU、启动本地服务或管理 Obsidian。
 设置页提供 MinerU 连接测试按钮；MinerU 测试会跟随当前选中的本地/在线标签页。
-
-## 开发
-
-```bash
-npm install
-npm test
-npm run typecheck
-npm run build
-npm run package
-```
-
-打包结果输出到：
-
-```text
-dist/package/super-scholar-0.1.1.xpi
-```
-
-开发加载时可在 Zotero profile 的 `extensions` 目录创建代理文件：
-
-```text
-super-scholar@Kohirus
-```
-
-文件内容写入：
-
-```text
-D:\Project\opensource\zotero-codex-obsidian\dist\addon
-```

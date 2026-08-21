@@ -32,31 +32,3 @@ local services, or manage Obsidian.
 
 The settings pane includes a MinerU connection test button. The test follows the
 selected local/online tab.
-
-## Development
-
-```bash
-npm install
-npm test
-npm run typecheck
-npm run build
-npm run package
-```
-
-The packaged add-on is written to:
-
-```text
-dist/package/super-scholar-0.1.1.xpi
-```
-
-For Zotero development loading, create an extension proxy file named:
-
-```text
-super-scholar@Kohirus
-```
-
-with the path to:
-
-```text
-D:\Project\opensource\zotero-codex-obsidian\dist\addon
-```
