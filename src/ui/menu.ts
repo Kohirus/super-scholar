@@ -50,7 +50,14 @@ function unregisterMainWindowLocale(win: ZoteroMainWindow): void {
 }
 
 function runExport(win: ZoteroMainWindow): void {
-  void exportCurrentSelectionToObsidian(win);
+  void exportCurrentSelectionToObsidian(win).catch((error) => {
+    debug(`Export command failed: ${error instanceof Error ? error.message : String(error)}`);
+  });
+}
+
+function scheduleExport(win: ZoteroMainWindow): void {
+  const schedule = win.setTimeout?.bind(win) ?? globalThis.setTimeout;
+  schedule(() => runExport(win), 0);
 }
 
 function getWindowFromCommandEvent(event: Event, fallbackWin?: ZoteroMainWindow): ZoteroMainWindow | null {
@@ -114,52 +121,15 @@ function iconPath(rootURI?: string): string {
 
 export function registerZcoMenuManager(win?: ZoteroMainWindow, rootURI?: string): boolean {
   const menuManager = (Zotero as any).MenuManager;
-  if (registeredMenuIDs.length > 0) return true;
-  if (!menuManager?.registerMenu) {
-    debug("MenuManager.registerMenu is unavailable; legacy menu fallback will be used.");
-    return false;
-  }
   try {
-    if (typeof menuManager._unregisterByPluginID === "function") {
+    if (typeof menuManager?._unregisterByPluginID === "function") {
       void menuManager._unregisterByPluginID(PLUGIN_ID);
     }
-    const icon = iconPath(rootURI);
-    const menuDefinitions = [
-      {
-        menuID: "zco-output-to-obsidian",
-        pluginID: PLUGIN_ID,
-        target: "main/library/item",
-        menus: [
-          {
-            menuType: "menuitem",
-            l10nID: "zco-output-to-obsidian",
-            icon,
-            onShown: (_event: Event, context: any) => {
-              if (context.menuElem && !context.menuElem.textContent) {
-                context.menuElem.textContent = MENU_LABEL;
-                context.menuElem.setAttribute?.("label", MENU_LABEL);
-              }
-              context.menuElem?.setAttribute?.("image", icon);
-              context.menuElem?.setAttribute?.("class", "menuitem-iconic");
-            },
-            onCommand: (event: Event) => {
-              const commandWin = getWindowFromCommandEvent(event, win);
-              if (commandWin) {
-                runExport(commandWin);
-              }
-            },
-          },
-        ],
-      },
-    ];
-    registeredMenuIDs = menuDefinitions.map((definition) => menuManager.registerMenu(definition) ?? definition.menuID);
-    debug("Registered MenuManager library item menu entry.");
-    return true;
   } catch (error) {
-    registeredMenuIDs = [];
-    debug(`MenuManager registration failed: ${error instanceof Error ? error.message : String(error)}`);
-    return false;
+    debug(`MenuManager stale cleanup failed: ${error instanceof Error ? error.message : String(error)}`);
   }
+  debug("Using legacy library item menu entry for stable repeated command handling.");
+  return false;
 }
 
 function trackFallbackListener(win: ZoteroMainWindow, element: Element, handler: EventListener): void {
@@ -212,7 +182,7 @@ function registerVisibleFallbackMenus(win: ZoteroMainWindow, rootURI?: string): 
   const itemMenu =
     doc(win).getElementById("zotero-itemmenu") ??
     doc(win).getElementById("zotero-itemmenu-addontop");
-  registerFallbackPopupMenuItem(win, itemMenu, "zco-item-menu", "输出到 Obsidian", icon, () => runExport(win));
+  registerFallbackPopupMenuItem(win, itemMenu, "zco-item-menu", "输出到 Obsidian", icon, () => scheduleExport(win));
 
   return Boolean(itemMenu);
 }

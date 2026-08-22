@@ -63,7 +63,7 @@ describe("ZCO menu registration", () => {
     await startup;
 
     expect(Zotero.getMainWindows).toHaveBeenCalled();
-    expect(registerMenu).toHaveBeenCalled();
+    expect(registerMenu).not.toHaveBeenCalled();
     expect(registerEventListener).toHaveBeenCalledWith(
       "createViewContextMenu",
       expect.any(Function),
@@ -71,8 +71,14 @@ describe("ZCO menu registration", () => {
     );
   });
 
-  it("registers the library item menu through MenuManager with a Fluent localization id", async () => {
+  it("uses a legacy library item menu even when MenuManager is available", async () => {
     const registerMenu = vi.fn((..._args: any[]) => "registered-menu-id");
+    const appended: Element[] = [];
+    const itemMenu = {
+      addEventListener: vi.fn(),
+      appendChild: vi.fn((element: Element) => appended.push(element)),
+    };
+    const elements = new Map<string, any>([["zotero-itemmenu", itemMenu]]);
     vi.stubGlobal("Zotero", {
       initializationPromise: Promise.resolve(),
       unlockPromise: Promise.resolve(),
@@ -86,29 +92,26 @@ describe("ZCO menu registration", () => {
 
     registerZcoMenus({
       document: {
-        getElementById: vi.fn(() => null),
+        getElementById: vi.fn((id: string) => elements.get(id) ?? null),
+        createXULElement: vi.fn((tag: string) => ({
+          tag,
+          attributes: new Map<string, string>(),
+          setAttribute(name: string, value: string) {
+            this.attributes.set(name, value);
+            if (name === "id") {
+              elements.set(value, this);
+            }
+          },
+          addEventListener: vi.fn(),
+        })),
       },
       MozXULElement: { insertFTLIfNeeded: vi.fn() },
     } as unknown as ZoteroMainWindow);
 
-    expect(registerMenu).toHaveBeenCalledWith(
-      expect.objectContaining({
-        menuID: "zco-output-to-obsidian",
-        pluginID: "super-scholar@Kohirus",
-        target: "main/library/item",
-      }),
-    );
-    const registeredMenu = registerMenu.mock.calls[0]?.[0] as any;
-    const menuItem = registeredMenu?.menus[0];
-    const menuElem = { textContent: "", setAttribute: vi.fn() };
-
-    menuItem.onShown(new Event("popupshown"), { menuElem });
-
-    expect(menuItem.l10nID).toBe("zco-output-to-obsidian");
-    expect(menuItem.icon).toBe("content/icons/logo.svg");
-    expect(menuItem.onShowing).toBeUndefined();
-    expect(menuElem.textContent).toBe("输出到 Obsidian");
-    expect(menuElem.setAttribute).toHaveBeenCalledWith("label", "输出到 Obsidian");
+    expect(registerMenu).not.toHaveBeenCalled();
+    expect(appended).toHaveLength(1);
+    expect((appended[0] as any).attributes.get("label")).toBe("输出到 Obsidian");
+    expect((appended[0] as any).attributes.get("image")).toBe("content/icons/logo.svg");
 
     shutdownPlugin(
       {
@@ -118,6 +121,42 @@ describe("ZCO menu registration", () => {
       },
       0,
     );
+  });
+
+  it("defers legacy menu commands until after the menu command event returns", () => {
+    const setTimeout = vi.fn();
+    const appended: any[] = [];
+    const itemMenu = {
+      addEventListener: vi.fn(),
+      appendChild: vi.fn((element: any) => appended.push(element)),
+    };
+    const elements = new Map<string, any>([["zotero-itemmenu", itemMenu]]);
+    const document = {
+      getElementById: vi.fn((id: string) => elements.get(id) ?? null),
+      createXULElement: vi.fn((tag: string) => ({
+        tag,
+        attributes: new Map<string, string>(),
+        setAttribute(name: string, value: string) {
+          this.attributes.set(name, value);
+          if (name === "id") {
+            elements.set(value, this);
+          }
+        },
+        addEventListener: vi.fn(),
+      })),
+    };
+    vi.stubGlobal("Zotero", {});
+
+    registerZcoMenus({
+      document,
+      setTimeout,
+      MozXULElement: { insertFTLIfNeeded: vi.fn() },
+    } as unknown as ZoteroMainWindow);
+
+    const command = appended[0].addEventListener.mock.calls.find(([event]: [string]) => event === "command")?.[1];
+    command?.();
+
+    expect(setTimeout).toHaveBeenCalledWith(expect.any(Function), 0);
   });
 
   it("removes stale plugin MenuManager registrations before registering the library item menu", () => {
@@ -139,7 +178,7 @@ describe("ZCO menu registration", () => {
     } as unknown as ZoteroMainWindow);
 
     expect(unregisterByPluginID).toHaveBeenCalledWith("super-scholar@Kohirus");
-    expect(registerMenu).toHaveBeenCalled();
+    expect(registerMenu).not.toHaveBeenCalled();
   });
 
   it("does not register a MenuManager Tools menu entry", () => {
@@ -158,12 +197,7 @@ describe("ZCO menu registration", () => {
       MozXULElement: { insertFTLIfNeeded: vi.fn() },
     } as unknown as ZoteroMainWindow);
 
-    expect(registerMenu).toHaveBeenCalledWith(
-      expect.objectContaining({
-        menuID: "zco-output-to-obsidian",
-        target: "main/library/item",
-      }),
-    );
+    expect(registerMenu).not.toHaveBeenCalled();
     expect(registerMenu).not.toHaveBeenCalledWith(
       expect.objectContaining({
         target: "main/menubar/tools",
@@ -171,7 +205,7 @@ describe("ZCO menu registration", () => {
     );
   });
 
-  it("does not append a legacy popup fallback when MenuManager registration succeeds", () => {
+  it("appends a legacy popup menu item even when MenuManager is available", () => {
     const appended: Element[] = [];
     const itemMenu = {
       addEventListener: vi.fn(),
@@ -201,7 +235,7 @@ describe("ZCO menu registration", () => {
     registerZcoMenus({ document } as unknown as ZoteroMainWindow);
 
     expect(itemMenu.addEventListener).toHaveBeenCalledWith("popupshowing", expect.any(Function));
-    expect(appended).toHaveLength(0);
+    expect(appended).toHaveLength(1);
   });
 
   it("registers a popupshowing fallback when MenuManager is unavailable", () => {
@@ -377,7 +411,7 @@ describe("ZCO menu registration", () => {
 
     pluginOnMainWindowLoad({ document } as unknown as ZoteroMainWindow);
 
-    expect(itemMenu.appendChild).not.toHaveBeenCalled();
+    expect(itemMenu.appendChild).toHaveBeenCalled();
   });
 
   it("waits for the legacy Zotero item menu when the main window DOM is still initializing", () => {
