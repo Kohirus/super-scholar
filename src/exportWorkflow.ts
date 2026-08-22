@@ -35,6 +35,44 @@ export type ExportWorkflowDeps = {
   progress?: ExportProgressReporter;
 };
 
+export type ZoteroPromptService = {
+  prompt(
+    parent: Window,
+    dialogTitle: string,
+    text: string,
+    value: { value: string },
+    checkMsg: string | null,
+    checkState: { value: boolean },
+  ): boolean;
+};
+
+function getZoteroPromptService(): ZoteroPromptService | undefined {
+  try {
+    return typeof Services !== "undefined" ? Services.prompt : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function promptForObsidianFolderName(
+  win: ZoteroMainWindow,
+  attachment: QueuePdfAttachment,
+  promptService = getZoteroPromptService(),
+): string | null {
+  if (promptService?.prompt) {
+    const value = { value: attachment.title };
+    const checkState = { value: false };
+    const accepted = promptService.prompt(win, "super-scholar", "Obsidian folder name", value, null, checkState);
+    return accepted ? value.value : null;
+  }
+
+  const prompt = win.prompt?.bind(win) ?? globalThis.prompt;
+  if (!prompt) {
+    return attachment.title;
+  }
+  return prompt("Obsidian folder name", attachment.title);
+}
+
 function missingSettings(settings: ZcoSettings): string[] {
   const missing: string[] = [];
   if (!settings.obsidian.notesDir.trim()) missing.push("Obsidian notes directory");
@@ -175,13 +213,7 @@ export async function exportPdfAttachmentsToObsidian(
   const deps: ExportWorkflowDeps = {
     getAttachments,
     readSettings: settings,
-    chooseFolderName: async (attachment) => {
-      const prompt = win.prompt?.bind(win) ?? globalThis.prompt;
-      if (!prompt) {
-        return attachment.title;
-      }
-      return prompt("Obsidian folder name", attachment.title);
-    },
+    chooseFolderName: async (attachment) => promptForObsidianFolderName(win, attachment),
     parsePdf: (attachment, mineruSettings, onProgress) =>
       parsePdfWithMineru(attachment.path, mineruSettings, onProgress, undefined, runtime),
     exportPaper: (request) => exporter.exportPaper(request),

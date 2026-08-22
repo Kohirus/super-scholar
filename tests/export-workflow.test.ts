@@ -1,8 +1,49 @@
 import { describe, expect, it, vi } from "vitest";
-import { exportSelectionToObsidian } from "../src/exportWorkflow";
+import { exportSelectionToObsidian, promptForObsidianFolderName } from "../src/exportWorkflow";
 import type { QueuePdfAttachment } from "../src/types/mineru";
 
 describe("exportSelectionToObsidian", () => {
+  it("opens repeated folder-name prompts through Zotero prompt service", () => {
+    const attachment: QueuePdfAttachment = {
+      id: 1,
+      key: "PDF1",
+      title: "Long Paper Title",
+      path: "D:/paper.pdf",
+    };
+    const win = {} as ZoteroMainWindow;
+    const prompt = vi.fn(
+      (_parent: Window, _title: string, _text: string, value: { value: string }) => {
+        value.value = `Folder ${prompt.mock.calls.length}`;
+        return true;
+      },
+    );
+
+    expect(promptForObsidianFolderName(win, attachment, { prompt })).toBe("Folder 1");
+    expect(promptForObsidianFolderName(win, attachment, { prompt })).toBe("Folder 2");
+
+    expect(prompt).toHaveBeenCalledTimes(2);
+    expect(prompt).toHaveBeenCalledWith(
+      win,
+      "super-scholar",
+      "Obsidian folder name",
+      expect.objectContaining({ value: "Folder 1" }),
+      null,
+      expect.objectContaining({ value: false }),
+    );
+  });
+
+  it("returns null when the Zotero folder-name prompt is cancelled", () => {
+    const attachment: QueuePdfAttachment = {
+      id: 1,
+      key: "PDF1",
+      title: "Long Paper Title",
+      path: "D:/paper.pdf",
+    };
+    const prompt = vi.fn(() => false);
+
+    expect(promptForObsidianFolderName({} as ZoteroMainWindow, attachment, { prompt })).toBeNull();
+  });
+
   it("prompts for a folder name, parses with MinerU, and exports only the PDF plus Markdown to Obsidian", async () => {
     const attachment: QueuePdfAttachment = {
       id: 1,

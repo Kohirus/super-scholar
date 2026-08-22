@@ -34,6 +34,19 @@ declare const Zotero: {
   };
 };
 
+declare const Services: {
+  prompt?: {
+    prompt(
+      parent: Window,
+      dialogTitle: string,
+      text: string,
+      value: { value: string },
+      checkMsg: string | null,
+      checkState: { value: boolean },
+    ): boolean;
+  };
+};
+
 declare const IOUtils: {
   exists(path: string): Promise<boolean>;
   makeDirectory(path: string, options?: { ignoreExisting?: boolean; createAncestors?: boolean }): Promise<void>;
