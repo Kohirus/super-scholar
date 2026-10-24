@@ -6,3 +6,4 @@ pref("extensions.zotero-codex-obsidian.mineru.cloudApiKey", "");
 pref("extensions.zotero-codex-obsidian.mineru.cloudModel", "auto");
 pref("extensions.zotero-codex-obsidian.mineru.forceOcr", false);
 pref("extensions.zotero-codex-obsidian.obsidian.notesDir", "");
+pref("extensions.zotero-codex-obsidian.pdf.excludeFilenameGlob", "");

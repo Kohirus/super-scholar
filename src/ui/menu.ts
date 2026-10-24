@@ -1,10 +1,11 @@
 import { exportCurrentSelectionToObsidian } from "../exportWorkflow";
+import { translate } from "../i18n";
 
 const FALLBACK_MENU_IDS = ["zco-item-menu"];
 const ZCO_MAIN_WINDOW_FTL = "zotero-codex-obsidian.ftl";
 const PLUGIN_ID = "super-scholar@Kohirus";
 const MENU_ICON = "content/icons/logo.svg";
-const MENU_LABEL = "输出到 Obsidian";
+const MENU_L10N_ID = "zco-output-to-obsidian";
 let registeredMenuIDs: unknown[] = [];
 const fallbackPopupListeners = new WeakMap<
   ZoteroMainWindow,
@@ -83,6 +84,7 @@ function addFallbackMenuItem(
     : documentWithXul.createElement("menuitem");
   item.setAttribute("id", id);
   item.setAttribute("label", label);
+  item.setAttribute("data-l10n-id", MENU_L10N_ID);
   item.setAttribute("class", "menuitem-iconic");
   item.setAttribute("image", icon);
   item.addEventListener("command", command);
@@ -97,9 +99,8 @@ function findFallbackMenuItem(win: ZoteroMainWindow, parent: Element, id: string
 function isZcoMenuElement(element: Element): boolean {
   return (
     element.getAttribute("id") === "zco-item-menu" ||
-    element.getAttribute("label") === MENU_LABEL ||
-    element.textContent === MENU_LABEL ||
-    (element as HTMLElement).dataset?.l10nId === "zco-output-to-obsidian"
+    element.getAttribute("data-l10n-id") === MENU_L10N_ID ||
+    (element as HTMLElement).dataset?.l10nId === MENU_L10N_ID
   );
 }
 
@@ -182,7 +183,14 @@ function registerVisibleFallbackMenus(win: ZoteroMainWindow, rootURI?: string): 
   const itemMenu =
     doc(win).getElementById("zotero-itemmenu") ??
     doc(win).getElementById("zotero-itemmenu-addontop");
-  registerFallbackPopupMenuItem(win, itemMenu, "zco-item-menu", "输出到 Obsidian", icon, () => scheduleExport(win));
+  registerFallbackPopupMenuItem(
+    win,
+    itemMenu,
+    "zco-item-menu",
+    translate("menu.exportToObsidian"),
+    icon,
+    () => scheduleExport(win),
+  );
 
   return Boolean(itemMenu);
 }

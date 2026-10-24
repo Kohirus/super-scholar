@@ -1,8 +1,9 @@
 {
   "manifest_version": 2,
   "name": "super-scholar",
-  "version": "0.1.1",
-  "description": "Export Zotero PDF papers to Obsidian Markdown through MinerU.",
+  "default_locale": "en",
+  "version": "0.2.0",
+  "description": "__MSG_extensionDescription__",
   "author": "Kohirus",
   "icons": {
     "16": "content/icons/logo.svg",

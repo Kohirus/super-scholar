@@ -6,9 +6,14 @@ export type ObsidianSettings = {
   notesDir: string;
 };
 
+export type PdfSettings = {
+  excludeFilenameGlob: string;
+};
+
 export type ZcoSettings = {
   mineru: MineruSettings;
   obsidian: ObsidianSettings;
+  pdf: PdfSettings;
 };
 
 export const DEFAULT_ZCO_SETTINGS: ZcoSettings = {
@@ -23,6 +28,9 @@ export const DEFAULT_ZCO_SETTINGS: ZcoSettings = {
   },
   obsidian: {
     notesDir: "",
+  },
+  pdf: {
+    excludeFilenameGlob: "",
   },
 };
 
@@ -76,6 +84,9 @@ export function readZcoSettingsFromPrefs(prefs: ZcoPrefReader): ZcoSettings {
     obsidian: {
       notesDir: readString(prefs, "obsidian.notesDir"),
     },
+    pdf: {
+      excludeFilenameGlob: readString(prefs, "pdf.excludeFilenameGlob"),
+    },
   };
 }
 
@@ -88,6 +99,7 @@ export function writeZcoSettingsToPrefs(prefs: ZcoPrefStore, settings: ZcoSettin
   prefs.setString("mineru.cloudModel", settings.mineru.cloudModel);
   prefs.setBoolean("mineru.forceOcr", settings.mineru.forceOcr);
   prefs.setString("obsidian.notesDir", settings.obsidian.notesDir.trim());
+  prefs.setString("pdf.excludeFilenameGlob", settings.pdf.excludeFilenameGlob.trim());
 }
 
 export function createZoteroPrefStore(zotero: {

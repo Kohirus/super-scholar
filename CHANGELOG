@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0
+
+- Add glob-based PDF filtering against Zotero attachment titles.
+- Update README branding and plugin assets.
+- Preserve absolute Obsidian paths on macOS.
+- Show export progress after the folder-name prompt so it remains visible on macOS.
+- Improve export diagnostics for MinerU and Obsidian stages.
+- Localize all Super-Scholar UI in Zotero for English and Simplified Chinese.
+
 ## 0.1.1
 
 - Fix repeated Zotero library context menu activation by using a stable legacy menu item path.

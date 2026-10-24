@@ -110,7 +110,8 @@ describe("ZCO menu registration", () => {
 
     expect(registerMenu).not.toHaveBeenCalled();
     expect(appended).toHaveLength(1);
-    expect((appended[0] as any).attributes.get("label")).toBe("输出到 Obsidian");
+    expect((appended[0] as any).attributes.get("label")).toBe("Export to Obsidian");
+    expect((appended[0] as any).attributes.get("data-l10n-id")).toBe("zco-output-to-obsidian");
     expect((appended[0] as any).attributes.get("image")).toBe("content/icons/logo.svg");
 
     shutdownPlugin(
@@ -267,7 +268,8 @@ describe("ZCO menu registration", () => {
 
     expect(itemMenu.addEventListener).toHaveBeenCalledWith("popupshowing", expect.any(Function));
     expect(appended).toHaveLength(1);
-    expect((appended[0] as any).attributes.get("label")).toBe("输出到 Obsidian");
+    expect((appended[0] as any).attributes.get("label")).toBe("Export to Obsidian");
+    expect((appended[0] as any).attributes.get("data-l10n-id")).toBe("zco-output-to-obsidian");
     expect((appended[0] as any).attributes.get("image")).toBe("content/icons/logo.svg");
   });
 
@@ -349,8 +351,47 @@ describe("ZCO menu registration", () => {
       handler();
     }
 
-    expect(appended.filter((element) => element.attributes.get("label") === "输出到 Obsidian")).toHaveLength(1);
+    expect(appended.filter((element) => element.attributes.get("id") === "zco-item-menu")).toHaveLength(1);
     expect(staleDuplicate.removed).toBe(true);
+  });
+
+  it("uses a Chinese fallback label and keeps one fixed-id item across repeated locale registration", () => {
+    const appended: any[] = [];
+    const itemMenu = {
+      children: appended,
+      addEventListener: vi.fn(),
+      appendChild: vi.fn((element: any) => appended.push(element)),
+      querySelector: vi.fn((selector: string) =>
+        selector === "#zco-item-menu"
+          ? appended.find((element) => element.attributes.get("id") === "zco-item-menu") ?? null
+          : null,
+      ),
+    };
+    const elements = new Map<string, any>([["zotero-itemmenu", itemMenu]]);
+    const document = {
+      getElementById: vi.fn((id: string) => elements.get(id) ?? null),
+      createXULElement: vi.fn(() => ({
+        attributes: new Map<string, string>(),
+        setAttribute(name: string, value: string) {
+          this.attributes.set(name, value);
+        },
+        getAttribute(name: string) {
+          return this.attributes.get(name) ?? null;
+        },
+        addEventListener: vi.fn(),
+      })),
+    };
+    const win = { document, MozXULElement: { insertFTLIfNeeded: vi.fn() } } as unknown as ZoteroMainWindow;
+    vi.stubGlobal("Zotero", { locale: "zh-CN" });
+
+    registerZcoMenus(win);
+    (Zotero as any).locale = "en-US";
+    registerZcoMenus(win);
+
+    expect(appended).toHaveLength(1);
+    expect(appended[0].attributes.get("id")).toBe("zco-item-menu");
+    expect(appended[0].attributes.get("label")).toBe("输出到 Obsidian");
+    expect(appended[0].attributes.get("data-l10n-id")).toBe("zco-output-to-obsidian");
   });
 
   it("inserts the main-window Fluent file before registering MenuManager menus", () => {
@@ -452,6 +493,7 @@ describe("ZCO menu registration", () => {
     observerCallback?.();
 
     expect(itemMenu.appendChild).toHaveBeenCalled();
-    expect((appended[0] as any).attributes.get("label")).toBe("输出到 Obsidian");
+    expect((appended[0] as any).attributes.get("label")).toBe("Export to Obsidian");
+    expect((appended[0] as any).attributes.get("data-l10n-id")).toBe("zco-output-to-obsidian");
   });
 });

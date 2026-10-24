@@ -1,6 +1,7 @@
 import { strToU8, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 import { extractMineruZip } from "../src/mineru/zip";
+import { UiError } from "../src/i18n";
 
 describe("extractMineruZip", () => {
   it("extracts full Markdown, content list, and asset files", () => {
@@ -27,6 +28,15 @@ describe("extractMineruZip", () => {
       "paper/readme.txt": strToU8("missing"),
     });
 
-    expect(() => extractMineruZip(zip)).toThrow("MinerU result ZIP is missing full.md");
+    try {
+      extractMineruZip(zip);
+      throw new Error("expected extraction to fail");
+    } catch (error) {
+      expect(error).toBeInstanceOf(UiError);
+      expect(error).toMatchObject({
+        messageKey: "error.zipMissingMarkdown",
+        message: "MinerU result ZIP is missing full.md",
+      });
+    }
   });
 });

@@ -1,4 +1,5 @@
 import type { QueuePdfAttachment } from "../types/mineru";
+import { translate } from "../i18n";
 
 type ZoteroLikeItem = {
   id: number;
@@ -21,7 +22,11 @@ function isPdfAttachment(item: ZoteroLikeItem | undefined): item is ZoteroLikeIt
 }
 
 function itemTitle(item: ZoteroLikeItem): string {
-  return item.getField?.("title") || item.getField?.("firstCreator") || `Item ${item.id}`;
+  return (
+    item.getField?.("title") ||
+    item.getField?.("firstCreator") ||
+    translate("attachment.untitled", { id: item.id })
+  );
 }
 
 async function toQueueAttachment(
@@ -34,6 +39,7 @@ async function toQueueAttachment(
     id: attachment.id,
     key: attachment.key || String(attachment.id),
     title,
+    attachmentTitle: itemTitle(attachment),
     path,
   };
 }

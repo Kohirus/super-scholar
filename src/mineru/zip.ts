@@ -1,4 +1,5 @@
 import { strFromU8, unzipSync } from "fflate";
+import { UiError } from "../i18n";
 import type { MineruExtractedFile, MineruParseResult } from "../types/mineru";
 
 function normalizePath(path: string): string {
@@ -16,7 +17,11 @@ export function extractMineruZip(bytes: Uint8Array): MineruParseResult {
   const fullMdName = names.find((name) => /(^|\/)full\.md$/i.test(name));
 
   if (!fullMdName) {
-    throw new Error("MinerU result ZIP is missing full.md");
+    throw new UiError(
+      "error.zipMissingMarkdown",
+      undefined,
+      "MinerU result ZIP is missing full.md",
+    );
   }
 
   const root = fullMdName.includes("/")
@@ -24,7 +29,11 @@ export function extractMineruZip(bytes: Uint8Array): MineruParseResult {
     : "";
   const markdownEntry = entries[fullMdName];
   if (!markdownEntry) {
-    throw new Error("MinerU result ZIP is missing full.md");
+    throw new UiError(
+      "error.zipMissingMarkdown",
+      undefined,
+      "MinerU result ZIP is missing full.md",
+    );
   }
 
   const contentListName = names.find((name) => /(^|\/)content_list\.json$/i.test(name));

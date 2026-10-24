@@ -24,9 +24,13 @@ await cp(resolve(root, "locale"), resolve(outDir, "locale"), {
   recursive: true,
 });
 
+await cp(resolve(root, "_locales"), resolve(outDir, "_locales"), {
+  recursive: true,
+});
+
 await cp(resolve(root, "content"), resolve(outDir, "content"), {
   recursive: true,
 });
 await rm(resolve(outDir, "content", "icons"), { recursive: true, force: true });
 await mkdir(resolve(outDir, "content", "icons"), { recursive: true });
-await copyFile(resolve(root, "assets", "logo.svg"), resolve(outDir, "content", "icons", "logo.svg"));
+await copyFile(resolve(root, "assets", "Super-Scholar-icon.svg"), resolve(outDir, "content", "icons", "logo.svg"));

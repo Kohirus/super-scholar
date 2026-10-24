@@ -1,4 +1,5 @@
-import { exportPdfAttachmentsToObsidian } from "../exportWorkflow";
+import { exportPdfAttachmentsToObsidian, showNotification } from "../exportWorkflow";
+import { localizeError, translate } from "../i18n";
 import type { QueuePdfAttachment } from "../types/mineru";
 import { collectPdfAttachmentsFromSelection } from "../zotero/attachments";
 
@@ -27,9 +28,10 @@ function debug(message: string): void {
 }
 
 function mainWindowForReader(reader: any): ZoteroMainWindow | null {
-  const iframeWindow = reader?._iframeWindow as Window | undefined;
-  const openerWindow = iframeWindow?.top as ZoteroMainWindow | undefined;
-  return openerWindow ?? ((Zotero.getMainWindows?.()[0] as ZoteroMainWindow | undefined) ?? null);
+  const readerWindow = (reader?._window ?? reader?._iframe?.ownerGlobal) as
+    | ZoteroMainWindow
+    | undefined;
+  return readerWindow ?? ((Zotero.getMainWindows?.()[0] as ZoteroMainWindow | undefined) ?? null);
 }
 
 function readerItemID(reader: any): number | null {
@@ -59,7 +61,11 @@ function exportReaderPdf(reader: any): void {
     debug("Reader export skipped because no Zotero main window was found.");
     return;
   }
-  void exportPdfAttachmentsToObsidian(win, () => getReaderPdfAttachment(reader));
+  void exportPdfAttachmentsToObsidian(win, () => getReaderPdfAttachment(reader)).catch((error) => {
+    const message = localizeError(error);
+    debug(`Reader export command failed: ${message}`);
+    showNotification(win, "super-scholar", message);
+  });
 }
 
 export function registerZcoReaderMenus(rootURI?: string): boolean {
@@ -78,7 +84,7 @@ export function registerZcoReaderMenus(rootURI?: string): boolean {
   const icon = iconPath(rootURI);
   readerViewContextMenuHandler = (event: any) => {
     event.append?.({
-      label: "输出到 Obsidian",
+      label: translate("menu.exportToObsidian"),
       icon,
       onCommand: () => exportReaderPdf(event.reader),
     });

@@ -1,4 +1,5 @@
 import type { ExportProgressReporter, ExportProgressUpdate } from "../exportWorkflow";
+import { translate, type UiLocale } from "../i18n";
 import type { QueueSummary } from "../types/mineru";
 
 type ProgressWindowLike = {
@@ -12,13 +13,15 @@ type ProgressWindowLike = {
   };
 };
 
-type ProgressWindowConstructor = new () => ProgressWindowLike;
+type ProgressWindowConstructor = new (options?: { window?: Window }) => ProgressWindowLike;
 
 export function createZoteroExportProgressReporter(options: {
   progressWindow?: ProgressWindowConstructor;
   closeDelayMs?: number;
   setTimeout?: (callback: () => void, ms: number) => unknown;
   icon?: string;
+  window?: Window;
+  locale?: UiLocale;
 }): ExportProgressReporter | undefined {
   const ProgressWindowCandidate = options.progressWindow ?? Zotero.ProgressWindow;
   if (!ProgressWindowCandidate) return undefined;
@@ -35,15 +38,16 @@ export function createZoteroExportProgressReporter(options: {
   const icon = options.icon ?? "content/icons/logo.svg";
   const closeDelayMs = options.closeDelayMs ?? 1500;
   const schedule = options.setTimeout ?? setTimeout;
+  const locale = options.locale;
 
   function ensureWindow(): ProgressWindowLike {
     if (!window) {
-      window = new ProgressWindowCtor();
+      window = new ProgressWindowCtor(options.window ? { window: options.window } : undefined);
       window.changeHeadline?.("super-scholar");
       if (window.ItemProgress) {
-        item = new window.ItemProgress(icon, "Preparing export");
+        item = new window.ItemProgress(icon, translate("progress.preparing", undefined, locale));
       } else {
-        window.addDescription?.("Preparing export");
+        window.addDescription?.(translate("progress.preparing", undefined, locale));
       }
       window.show?.();
     }
@@ -62,14 +66,31 @@ export function createZoteroExportProgressReporter(options: {
 
   return {
     start({ total }) {
-      updateText(total === 1 ? "Preparing 1 PDF" : `Preparing ${total} PDFs`, 0);
+      updateText(
+        total === 1
+          ? translate("progress.preparingOne", undefined, locale)
+          : translate("progress.preparingMany", { total }, locale),
+        0,
+      );
     },
     update(update: ExportProgressUpdate) {
-      updateText(`${update.stage}: ${update.attachmentTitle}`, update.percent);
+      const stage = translate(update.stage, update.variables, locale);
+      updateText(
+        translate("progress.item", { stage, title: update.attachmentTitle }, locale),
+        update.percent,
+      );
     },
     finish(summary: QueueSummary) {
       updateText(
-        `Finished: ${summary.processed} exported, ${summary.skipped} skipped, ${summary.failed} failed`,
+        translate(
+          "progress.finished",
+          {
+            processed: summary.processed,
+            skipped: summary.skipped,
+            failed: summary.failed,
+          },
+          locale,
+        ),
         100,
       );
     },
