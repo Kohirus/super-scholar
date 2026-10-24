@@ -1,3 +1,5 @@
+import type { UiMessageKey } from "../i18n";
+
 export type MineruMode = "cloud" | "local";
 
 export type MineruLocalBackend = "pipeline" | "vlm" | "hybrid";
@@ -25,10 +27,17 @@ export type MineruParseResult = {
   files: MineruExtractedFile[];
 };
 
+export type MineruProgress = {
+  key: UiMessageKey;
+  variables?: Record<string, string | number>;
+  fraction: number;
+};
+
 export type QueuePdfAttachment = {
   id: number;
   key: string;
   title: string;
+  attachmentTitle?: string;
   path: string;
 };
 

@@ -26,7 +26,7 @@ declare const Zotero: {
       getDataDirectory?: () => { path: string };
     };
   };
-  ProgressWindow?: new () => {
+  ProgressWindow?: new (options?: { window?: Window }) => {
     changeHeadline(text: string): void;
     addDescription(text: string): void;
     show(): void;

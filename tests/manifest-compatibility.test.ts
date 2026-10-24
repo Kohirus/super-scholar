@@ -22,5 +22,20 @@ describe("Zotero compatibility manifest", () => {
       "48": "content/icons/logo.svg",
       "96": "content/icons/logo.svg",
     });
+    expect(manifest.default_locale).toBe("en");
+    expect(manifest.description).toBe("__MSG_extensionDescription__");
+
+    const english = JSON.parse(
+      readFileSync(resolve(import.meta.dirname, "..", "_locales", "en", "messages.json"), "utf8"),
+    );
+    const chinese = JSON.parse(
+      readFileSync(resolve(import.meta.dirname, "..", "_locales", "zh_CN", "messages.json"), "utf8"),
+    );
+    expect(english.extensionDescription.message).toBe(
+      "Export Zotero PDF papers to Obsidian Markdown through MinerU.",
+    );
+    expect(chinese.extensionDescription.message).toBe(
+      "通过 MinerU 将 Zotero PDF 论文导出为 Obsidian Markdown。",
+    );
   });
 });

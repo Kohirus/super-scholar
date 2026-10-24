@@ -1,4 +1,5 @@
 import type { MineruExtractedFile, MineruParseResult } from "./types/mineru";
+import { UiError } from "./i18n";
 
 export type ObsidianExportFs = {
   exists(path: string): Promise<boolean>;
@@ -30,11 +31,13 @@ function separatorFor(root: string): "/" | "\\" {
 }
 
 function joinPath(...parts: string[]): string {
-  const separator = separatorFor(parts[0] ?? "");
-  return parts
+  const root = parts[0] ?? "";
+  const separator = separatorFor(root);
+  const joined = parts
     .flatMap((part) => part.split(/[\\/]+/))
     .filter(Boolean)
     .join(separator);
+  return root.startsWith("/") ? `/${joined}` : joined;
 }
 
 function safeAssetPath(value: string): string {
@@ -62,7 +65,11 @@ function bytesToHex(bytes: ArrayBuffer): string {
 
 export async function buildHashedPdfName(bytes: Uint8Array, cryptoImpl: Crypto = globalThis.crypto): Promise<string> {
   if (!cryptoImpl?.subtle) {
-    throw new Error("No Web Crypto implementation is available for PDF hashing");
+    throw new UiError(
+      "error.cryptoUnavailable",
+      undefined,
+      "No Web Crypto implementation is available for PDF hashing",
+    );
   }
   const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
   const digest = await cryptoImpl.subtle.digest("SHA-256", buffer);
@@ -78,7 +85,37 @@ async function uniquePaperDir(root: string, folderTitle: string, fs: ObsidianExp
       return candidate;
     }
   }
-  throw new Error("Unable to create a unique Obsidian paper directory");
+  throw new UiError(
+    "error.uniqueDirectory",
+    undefined,
+    "Unable to create a unique Obsidian paper directory",
+  );
+}
+
+async function writeBytes(path: string, value: Uint8Array, fs: ObsidianExportFs): Promise<void> {
+  try {
+    await fs.writeBytes(path, value);
+  } catch (error) {
+    throw new UiError(
+      "error.obsidianWriteFailed",
+      { path },
+      `Unable to write Obsidian file: ${path}`,
+      error,
+    );
+  }
+}
+
+async function writeText(path: string, value: string, fs: ObsidianExportFs): Promise<void> {
+  try {
+    await fs.writeText(path, value);
+  } catch (error) {
+    throw new UiError(
+      "error.obsidianWriteFailed",
+      { path },
+      `Unable to write Obsidian file: ${path}`,
+      error,
+    );
+  }
 }
 
 async function writeMineruAssets(dir: string, files: MineruExtractedFile[], fs: ObsidianExportFs): Promise<void> {
@@ -88,21 +125,28 @@ async function writeMineruAssets(dir: string, files: MineruExtractedFile[], fs: 
     const assetPath = joinPath(dir, "assets", safeAssetPath(file.path));
     const parent = assetPath.slice(0, Math.max(assetPath.lastIndexOf("/"), assetPath.lastIndexOf("\\")));
     if (parent) await fs.mkdir(parent);
-    await fs.writeBytes(assetPath, file.bytes);
+    await writeBytes(assetPath, file.bytes, fs);
   }
 }
 
 export function createObsidianExporter(options: { fs: ObsidianExportFs; crypto?: Crypto }): ObsidianExporter {
   return {
     async exportPaper(request) {
+      if (!request.notesRoot.trim()) {
+        throw new UiError(
+          "error.obsidianRootRequired",
+          undefined,
+          "Obsidian notes directory is required",
+        );
+      }
       const paperDir = await uniquePaperDir(request.notesRoot, request.folderTitle, options.fs);
       const pdfBytes = await options.fs.readBytes(request.sourcePdfPath);
       const pdfPath = joinPath(paperDir, await buildHashedPdfName(pdfBytes, options.crypto));
       const sourceMarkdownPath = joinPath(paperDir, "原文解析.md");
 
-      await options.fs.writeBytes(pdfPath, pdfBytes);
+      await writeBytes(pdfPath, pdfBytes, options.fs);
       await writeMineruAssets(paperDir, request.mineru.files, options.fs);
-      await options.fs.writeText(sourceMarkdownPath, rewriteMarkdownAssetLinks(request.mineru.markdown));
+      await writeText(sourceMarkdownPath, rewriteMarkdownAssetLinks(request.mineru.markdown), options.fs);
 
       return {
         paperDir,

@@ -1,9 +1,19 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { exportPdfAttachmentsToObsidian, showNotification } from "../src/exportWorkflow";
 import { registerZcoReaderMenus, unregisterZcoReaderMenus } from "../src/ui/readerMenu";
+
+vi.mock("../src/exportWorkflow", () => ({
+  exportPdfAttachmentsToObsidian: vi.fn(),
+  showNotification: vi.fn(),
+}));
+
+const exportPdfAttachments = vi.mocked(exportPdfAttachmentsToObsidian);
+const notify = vi.mocked(showNotification);
 
 describe("ZCO reader menu registration", () => {
   afterEach(() => {
     unregisterZcoReaderMenus();
+    vi.clearAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -30,10 +40,30 @@ describe("ZCO reader menu registration", () => {
 
     expect(append).toHaveBeenCalledWith(
       expect.objectContaining({
-        label: "输出到 Obsidian",
+        label: "Export to Obsidian",
         icon: "content/icons/logo.svg",
         onCommand: expect.any(Function),
       }),
+    );
+  });
+
+  it("uses a Simplified Chinese reader-menu label", () => {
+    const registerEventListener = vi.fn();
+    vi.stubGlobal("Zotero", {
+      locale: "zh-CN",
+      Reader: {
+        registerEventListener,
+        unregisterEventListener: vi.fn(),
+      },
+    });
+
+    registerZcoReaderMenus();
+    const handler = registerEventListener.mock.calls[0]?.[1] as (event: any) => void;
+    const append = vi.fn();
+    handler({ append, reader: { itemID: 42 } });
+
+    expect(append).toHaveBeenCalledWith(
+      expect.objectContaining({ label: "输出到 Obsidian" }),
     );
   });
 
@@ -77,5 +107,59 @@ describe("ZCO reader menu registration", () => {
     }
 
     expect(append).toHaveBeenCalledTimes(1);
+  });
+
+  it("handles and logs a rejected reader export command", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const registerEventListener = vi.fn();
+    const initiatingWindow = {} as ZoteroMainWindow;
+    exportPdfAttachments.mockRejectedValueOnce(new Error("boom"));
+    vi.stubGlobal("Zotero", {
+      Reader: {
+        registerEventListener,
+        unregisterEventListener: vi.fn(),
+      },
+      getMainWindows: () => [initiatingWindow],
+    });
+
+    registerZcoReaderMenus();
+    const handler = registerEventListener.mock.calls[0]?.[1] as (event: any) => void;
+    const append = vi.fn();
+    handler({ append, reader: { itemID: 42 } });
+    const command = append.mock.calls[0]?.[0]?.onCommand as () => void;
+    command();
+
+    await vi.waitFor(() => {
+      expect(warn).toHaveBeenCalledWith("[ZCO] Reader export command failed: boom");
+      expect(notify).toHaveBeenCalledWith(initiatingWindow, "super-scholar", "boom");
+    });
+  });
+
+  it("uses the standalone reader chrome window instead of its content window", () => {
+    const registerEventListener = vi.fn();
+    const readerWindow = {} as ZoteroMainWindow;
+    const mainWindow = {} as ZoteroMainWindow;
+    const contentWindow = {} as Window;
+    Object.assign(contentWindow, { top: contentWindow });
+    exportPdfAttachments.mockResolvedValueOnce({ processed: 1, skipped: 0, failed: 0 });
+    vi.stubGlobal("Zotero", {
+      Reader: {
+        registerEventListener,
+        unregisterEventListener: vi.fn(),
+      },
+      getMainWindows: () => [mainWindow],
+    });
+
+    registerZcoReaderMenus();
+    const handler = registerEventListener.mock.calls[0]?.[1] as (event: any) => void;
+    const append = vi.fn();
+    handler({
+      append,
+      reader: { itemID: 42, _window: readerWindow, _iframeWindow: contentWindow },
+    });
+    const command = append.mock.calls[0]?.[0]?.onCommand as () => void;
+    command();
+
+    expect(exportPdfAttachments).toHaveBeenCalledWith(readerWindow, expect.any(Function));
   });
 });

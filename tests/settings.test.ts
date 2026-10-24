@@ -22,6 +22,9 @@ describe("ZCO settings", () => {
       obsidian: {
         notesDir: "",
       },
+      pdf: {
+        excludeFilenameGlob: "",
+      },
     });
     expect(JSON.stringify(DEFAULT_ZCO_SETTINGS)).not.toMatch(/chatgpt|openai|templatePath/i);
   });
@@ -55,6 +58,9 @@ describe("ZCO settings", () => {
       obsidian: {
         notesDir: "D:/Vault/Papers",
       },
+      pdf: {
+        excludeFilenameGlob: "  *-dual  ",
+      },
     });
 
     expect(readZcoSettingsFromPrefs(store)).toEqual({
@@ -69,6 +75,9 @@ describe("ZCO settings", () => {
       },
       obsidian: {
         notesDir: "D:/Vault/Papers",
+      },
+      pdf: {
+        excludeFilenameGlob: "*-dual",
       },
     });
     expect([...values.keys()].every((key) => key.startsWith("extensions.zotero-codex-obsidian."))).toBe(true);
